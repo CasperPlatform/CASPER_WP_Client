@@ -14,7 +14,9 @@
             </Viewbox>
         </Grid>
         <Grid Margin="0,80,0,0" Background="#FFDBDCDC">
-            <Button Click ="OnDrive" x:Name="drive" Content="Drive" HorizontalAlignment="Stretch" Margin="75,25,75,450" VerticalAlignment="Stretch" Height="77" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
+            <Button Click ="OnDrive" x:Name="drive" Content="Drive" HorizontalAlignment="Stretch" Margin="75,25,75,450" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
+            <Button Click ="OnSockets" x:Name="socket" Content="Socket" HorizontalAlignment="Stretch" Margin="75,100,75,375" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
         </Grid>
+        
     </Grid>
 </Page>

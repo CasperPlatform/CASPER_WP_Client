@@ -19,6 +19,6 @@
 
         <TextBox x:Name="username" AcceptsReturn="True" FontFamily="Arial" Foreground="#FFDBDCDC" PlaceholderText="Username" Margin="75,250,75,0"/>
         <PasswordBox x:Name="passwordBox" Foreground="#FFDBDCDC" PlaceholderText="Password" Margin="75,300,75,0"/>
-        <Button Click="OnLogin" x:Name="login" Content="Button" Margin="75,400,75,150" Background="#FF2DEF96" BorderThickness="0" HorizontalAlignment="Stretch"/>
+        <Button Click="OnLogin" x:Name="login" Content="Button" Margin="75,0,75,165" Background="#FF2DEF96" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60"/>
     </Grid>
 </Page>

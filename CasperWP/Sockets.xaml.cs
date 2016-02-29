@@ -1,4 +1,4 @@
-using CasperWP.Common;
+﻿using CasperWP.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +15,10 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.Networking;
+using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
+using System.Diagnostics;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -23,29 +27,122 @@ namespace CasperWP
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class Menu : Page
+    public sealed partial class Sockets : Page
     {
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
-        public Menu()
+        private StreamSocket clientSocket;
+        private HostName serverHost;
+        private string serverHostnameString;
+        private string serverPort;
+        private bool connected = false;
+        private bool closing = false;
+
+        public Sockets()
         {
             this.InitializeComponent();
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+
+            clientSocket = new StreamSocket();
         }
 
-        private void OnDrive(object sender, RoutedEventArgs e)
+        private async void OnConnect(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(Drive));
+            if (connected)
+            {
+                statusText.Text = "Already connected";
+                return;
+            }
+
+            try
+            {
+                outputText.Text = "";
+                statusText.Text = "Trying to connect ...";
+
+                serverHost = new HostName(ip.Text);
+                // Try to connect to the 
+                await clientSocket.ConnectAsync(serverHost, port.Text);
+                connected = true;
+                statusText.Text = "Connection established" + Environment.NewLine;
+
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception.Message);
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                statusText.Text = "Connect failed with error: " + exception.Message;
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                closing = true;
+                // the Close method is mapped to the C# Dispose
+                clientSocket.Dispose();
+                clientSocket = null;
+
+            }
         }
 
-        private void OnSockets(object sender, RoutedEventArgs e)
+        private async void OnMessage(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(Sockets));
+            if (!connected)
+            {
+                statusText.Text = "Must be connected to send!";
+                return;
+            }
+
+            Int32 len = 0; // Gets the UTF-8 string length.
+
+            try
+            {
+                outputText.Text = "";
+                statusText.Text = "Trying to send data ...";
+
+                // add a newline to the text to send
+                string sendData = message.Text + 0x4;
+                DataWriter writer = new DataWriter(clientSocket.OutputStream);
+                len = (Int32)writer.MeasureString(sendData); // Gets the UTF-8 string length.
+
+                // Call StoreAsync method to store the data to a backing stream
+                await writer.StoreAsync();
+
+                statusText.Text = "Data was sent";
+
+                // detach the stream and close it
+                writer.DetachStream();
+                writer.Dispose();
+
+            }
+            catch (Exception exception)
+            {
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                statusText.Text = "Send data or receive failed with error: " + exception.Message;
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                closing = true;
+                clientSocket.Dispose();
+                clientSocket = null;
+                connected = false;
+
+            }
         }
+
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
@@ -116,6 +213,5 @@ namespace CasperWP
         }
 
         #endregion
-
     }
 }
