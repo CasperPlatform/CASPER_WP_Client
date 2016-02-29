@@ -1,0 +1,18 @@
+<Page
+    x:Class="CasperWP.Drive"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CasperWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid x:Name="LayoutRoot" Background="#FFDBDCDC">
+
+        <Viewbox Margin="25,275,475,25">
+            <Ellipse Fill="#66203448" Margin="0" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="100"/>
+        </Viewbox>
+
+    </Grid>
+</Page>

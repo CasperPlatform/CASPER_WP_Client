@@ -1,0 +1,24 @@
+<Page
+    x:Class="CasperWP.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CasperWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="#FF203448">
+        <Viewbox Stretch="Uniform" Margin="75,100,75,400">
+            <TextBlock Grid.Row="0" x:Name="logo" Margin="0" TextWrapping="Wrap" FontSize="48" Foreground="#FFDBDCDC" FontWeight="Bold" FontFamily="Arial">
+        	    <Run Text="CASP"/>
+        	    <Run Text="."/>
+        	    <Run FontStyle="Italic" Text="ER"/>
+            </TextBlock>
+        </Viewbox>
+
+        <TextBox x:Name="username" AcceptsReturn="True" FontFamily="Arial" Foreground="#FFDBDCDC" PlaceholderText="Username" Margin="75,250,75,0"/>
+        <PasswordBox x:Name="passwordBox" Foreground="#FFDBDCDC" PlaceholderText="Password" Margin="75,300,75,0"/>
+        <Button Click="OnLogin" x:Name="login" Content="Button" Margin="75,400,75,150" Background="#FF2DEF96" BorderThickness="0" HorizontalAlignment="Stretch"/>
+    </Grid>
+</Page>
