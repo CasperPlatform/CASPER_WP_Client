@@ -17,9 +17,9 @@
             </Viewbox>
         </Grid>
         <Grid Margin="0,80,0,0" Background="#FFDBDCDC">
-            <TextBox x:Name="ip" PlaceholderText="IP:" Margin="75,25,75,495" VerticalAlignment="Stretch" Foreground="#FFDBDCDC"/>
-            <TextBox x:Name="port" PlaceholderText="Port:" Margin="75,75,75,445" VerticalAlignment="Stretch" Foreground="#FFDBDCDC"/>
-            <TextBox x:Name="message" PlaceholderText="Message:" Margin="75,125,75,395" VerticalAlignment="Stretch" Foreground="#FFDBDCDC"/>
+            <TextBox x:Name="ip" PlaceholderText="IP:" Margin="75,25,75,495" VerticalAlignment="Stretch" Foreground="#FFDBDCDC" Text="192.168.10.1"/>
+            <TextBox x:Name="port" PlaceholderText="Port:" Margin="75,75,75,445" VerticalAlignment="Stretch" Foreground="#FFDBDCDC" Text="3000"/>
+            <TextBox x:Name="message" PlaceholderText="Message:" Margin="75,125,75,395" VerticalAlignment="Stretch" Foreground="#FFDBDCDC" Text="Bajs"/>
 
             <Viewbox x:Name="statusTextViewBox" Margin="25,195,25,265" Height="85">
                 <TextBlock x:Name="statusText" Foreground="Black" Text="Status Text" FontFamily="Arial" FontSize="64"/>

@@ -15,6 +15,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Diagnostics;
+
+
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -28,6 +31,9 @@ namespace CasperWP
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
+        private double XCoordinate;
+        private double YCoordinate;
+
         public Drive()
         {
             this.InitializeComponent();
@@ -35,6 +41,29 @@ namespace CasperWP
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+        }
+
+        private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {      
+            Point dragPoint = e.GetCurrentPoint(Board).Position;
+
+            Canvas.SetLeft(joystickButton, dragPoint.X-25);
+            Canvas.SetTop(joystickButton, dragPoint.Y-25);
+
+            XCoordinate = (dragPoint.X - 75) / 75;
+            YCoordinate = -1*(dragPoint.Y - 75) / 75;
+        }
+
+        private void JoystickReleased(object sender, PointerRoutedEventArgs e)
+        {
+            Canvas.SetLeft(joystickButton, 37.5);
+            Canvas.SetTop(joystickButton, 37.5);
+        }
+
+        private void LeftCanvas(object sender, PointerRoutedEventArgs e)
+        {
+            Canvas.SetLeft(joystickButton, 37.5);
+            Canvas.SetTop(joystickButton, 37.5);
         }
 
         /// <summary>

@@ -9,10 +9,13 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid x:Name="LayoutRoot" Background="#FFDBDCDC">
-
-        <Viewbox Margin="25,275,475,25">
-            <Ellipse Fill="#66203448" Margin="0" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="100"/>
-        </Viewbox>
-
+        <Grid Width="150" Height="150" Margin="25,0,0,25" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Canvas x:Name="Board">
+                <Rectangle Fill="#02FDFDFD" Width="200" Height="200" Canvas.Left="-25" Canvas.Top="-25" PointerMoved="LeftCanvas"/>
+                <Ellipse x:Name="joyStickBackground"  Fill="#B1B6B6B6" Stroke="Black" StrokeThickness="2" Height="150" Width="150"/>
+                <Ellipse x:Name="joystickButton" Fill="#FF2DEF96" Stroke="Black" Width="75" Height="75" Canvas.Left="37.5" Canvas.Top="37.5"/>
+                <Ellipse x:Name="joyStickTouchArea" Height="150" Width="150" PointerReleased="JoystickReleased" PointerMoved="Canvas_PointerMoved" Fill="#02FFFFFF"/>
+            </Canvas>
+        </Grid>
     </Grid>
 </Page>

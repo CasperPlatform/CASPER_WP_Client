@@ -108,11 +108,12 @@ namespace CasperWP
                 statusText.Text = "Trying to send data ...";
 
                 // add a newline to the text to send
-                string sendData = message.Text + 0x4;
+                string sendData = message.Text + Environment.NewLine;
                 DataWriter writer = new DataWriter(clientSocket.OutputStream);
-                len = (Int32)writer.MeasureString(sendData); // Gets the UTF-8 string length.
 
                 // Call StoreAsync method to store the data to a backing stream
+                writer.WriteString(sendData);
+
                 await writer.StoreAsync();
 
                 statusText.Text = "Data was sent";
