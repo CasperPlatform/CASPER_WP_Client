@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
+using Windows.System.Threading;
 
 
 
@@ -31,8 +32,10 @@ namespace CasperWP
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
-        private double XCoordinate;
-        private double YCoordinate;
+        private double XCoordinate = 0;
+        private double YCoordinate = 0;
+
+        private Socket socket;
 
         public Drive()
         {
@@ -41,9 +44,54 @@ namespace CasperWP
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+
+            ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ConnectionDelegate()));
+
+            TimeSpan period = TimeSpan.FromMilliseconds(50);
+
+            ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => StreamDelegate(), period);
         }
 
-        private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+        private void ConnectionDelegate()
+        {
+            socket = new Socket("192.168.1.238", "3000");
+
+            socket.Connect();
+        }
+
+        private void StreamDelegate()
+        {
+            if (socket == null)
+            {
+                return;
+            }
+            else if (!socket.Connected)
+            {
+                return;
+            }
+            else
+            {
+                Byte[] message = new Byte[8];
+
+                message[0] = (Byte)'D';
+                message[1] = (Byte)'F';
+                message[2] = (Byte)'L';
+
+                Byte Y = (Byte)(Math.Abs(YCoordinate) * 255);
+
+                message[3] = Y;
+
+                Byte X = (Byte)(Math.Abs(XCoordinate) * 255);
+
+                message[4] = X;
+                message[6] = 0xD;
+                message[7] = 0xA;
+
+                socket.SendMessage(message);          
+            }
+        }
+
+        private async void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
         {      
             Point dragPoint = e.GetCurrentPoint(Board).Position;
 
@@ -51,13 +99,16 @@ namespace CasperWP
             Canvas.SetTop(joystickButton, dragPoint.Y-25);
 
             XCoordinate = (dragPoint.X - 75) / 75;
-            YCoordinate = -1*(dragPoint.Y - 75) / 75;
+            YCoordinate = -1*(dragPoint.Y - 75) / 75;            
         }
 
         private void JoystickReleased(object sender, PointerRoutedEventArgs e)
         {
             Canvas.SetLeft(joystickButton, 37.5);
             Canvas.SetTop(joystickButton, 37.5);
+
+            XCoordinate = 0;
+            YCoordinate = 0;
         }
 
         private void LeftCanvas(object sender, PointerRoutedEventArgs e)

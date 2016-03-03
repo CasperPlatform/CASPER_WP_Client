@@ -101,6 +101,7 @@
       <DependentUpon>Menu.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Socket.cs" />
     <Compile Include="Sockets.xaml.cs">
       <DependentUpon>Sockets.xaml</DependentUpon>
     </Compile>
