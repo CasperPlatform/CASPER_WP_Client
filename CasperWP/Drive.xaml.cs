@@ -74,8 +74,36 @@ namespace CasperWP
                 Byte[] message = new Byte[8];
 
                 message[0] = (Byte)'D';
-                message[1] = (Byte)'F';
-                message[2] = (Byte)'L';
+
+                char driveFlag;
+                if(XCoordinate>0)
+                {
+                    driveFlag = 'F';
+                }
+                else if(XCoordinate<0)
+                {
+                    driveFlag = 'B';
+                }
+                else
+                {
+                    driveFlag = 'I';
+                }
+                message[1] = (Byte)driveFlag;
+
+                char steerFlag;
+                if (XCoordinate > 0)
+                {
+                    steerFlag = 'R';
+                }
+                else if (XCoordinate < 0)
+                {
+                    steerFlag = 'L';
+                }
+                else
+                {
+                    steerFlag = 'I';
+                }
+                message[2] = (Byte)steerFlag;
 
                 Byte Y = (Byte)(Math.Abs(YCoordinate) * 255);
 
