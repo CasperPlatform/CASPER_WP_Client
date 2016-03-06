@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,6 +12,8 @@ using Windows.UI.Xaml.Controls;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml.Media.Imaging;
 using System.IO;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
 
 namespace CasperWP
 {
@@ -239,8 +241,10 @@ namespace CasperWP
             }
         }
 
-        private async void ClientUDPSocket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
+        private void ClientUDPSocket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
+            Debug.WriteLine(currentPacket);
+
             DataReader reader = args.GetDataReader();
 
             Byte[] message = new Byte[reader.UnconsumedBufferLength];
@@ -252,7 +256,7 @@ namespace CasperWP
                 string packetLength = "";
                 string imageLength = "";
 
-                for(int i = 1; i<3; i++)
+                for(int i = 1; i<2; i++)
                 {
                     packetLength += (char)message[i];
                     Debug.WriteLine(packetLength);
@@ -261,7 +265,7 @@ namespace CasperWP
                 packetCount = int.Parse(packetLength);
                 Debug.WriteLine("Packet Count is: " + packetCount);
 
-                for (int i = 3; i<message.Length; i++)
+                for (int i = 2; i<message.Length; i++)
                 {
                     imageLength += (char)message[i]; 
                 }
@@ -278,49 +282,66 @@ namespace CasperWP
             }
             else
             {
-                if(currentPacket == packetCount-1)
+               
+                currentImage[currentPacket] = message;
+
+                currentByte += message.Length;
+
+                currentPacket++;
+
+                Debug.WriteLine("CurrentPacket = " + currentPacket + "/" + packetCount + ", CurrentByte = " + currentByte + "/" + imageSize + ".");
+
+                if (currentPacket == packetCount)
                 {
                     Debug.WriteLine(currentByte + ", " + imageSize);
 
                     Byte[] imageArray = new Byte[imageSize];
                     int currentIndex = 0;
 
-                    foreach(Byte[] array in currentImage)
+                    foreach (Byte[] array in currentImage)
                     {
                         System.Buffer.BlockCopy(array, 0, imageArray, currentIndex, array.Length);
 
                         currentIndex += array.Length;
                     }
+           
                     Debug.WriteLine("before");
-                    BitmapImage image = await ConvertToBitmapImage(imageArray);
-                    Debug.WriteLine("after");
 
-                    videoView.Source = image;
+                    ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ImageConverter(imageArray)));
 
                     Debug.WriteLine("last");
 
                     isFinished = true;
                 }
-                else
-                {                   
-                    currentImage[currentPacket] = message;
-                    currentByte += message.Length;                   
-
-                    currentPacket++;
-
-                    Debug.WriteLine("CurrentPacket = " + currentPacket + "/" + packetCount + ", CurrentByte = " + currentByte + "/" + imageSize + ".");          
-                }
             }
         }
 
-        public async Task<BitmapImage> ConvertToBitmapImage(byte[] image)
+        public async void ImageConverter(Byte[] image)
         {
-            InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream();
-            var bitmapImage = new BitmapImage();
-            var memoryStream = new MemoryStream(image);
-            await memoryStream.CopyToAsync(ras.AsStreamForWrite());
-            await bitmapImage.SetSourceAsync(ras);
-            return bitmapImage;
+            Debug.WriteLine("Test1");
+            InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream();
+            Debug.WriteLine("Test2");
+
+            await randomAccessStream.WriteAsync(image.AsBuffer());
+            Debug.WriteLine("Test3");
+
+            randomAccessStream.Seek(0); // Just to be sure.
+            Debug.WriteLine("Test4");
+
+            CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+            Debug.WriteLine("Test5");
+
+            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                WriteableBitmap bitmap = new WriteableBitmap(640, 480);
+                Debug.WriteLine("Test5");
+
+                await bitmap.SetSourceAsync(randomAccessStream);
+                Debug.WriteLine("Test6");
+
+
+                videoView.Source = bitmap;
+            }); 
         }
     }
 }
