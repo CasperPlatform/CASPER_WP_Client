@@ -7,50 +7,78 @@ using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
+using Windows.System.Threading;
+using Windows.UI.Xaml.Controls;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.UI.Xaml.Media.Imaging;
+using System.IO;
 
 namespace CasperWP
 {
     class Socket
     {
-        private StreamSocket clientSocket;
+        private StreamSocket clientTCPSocket;
+        private DatagramSocket clientUDPSocket;
         private HostName serverHost;
         private string serverHostnameString;
-        private string serverPort;
+        private string serverTCPPort;
+        private string serverUDPPort;
 
-        private bool m_connected = false;
+        private int packetCount = 0;
+        private int imageSize = 0;
+        private int currentPacket = 0;
+        private int currentByte = 0;
+        private Byte[][] currentImage;
+        private bool isFinished = false;
 
-        public bool Connected
+        private bool m_TCPConnected = false;
+
+        public bool TCPConnected
         {       
-            get { return m_connected; }
+            get { return m_TCPConnected; }
         }
+
+        private bool m_UDPConnected = false;
+
+        public bool UDPConnected
+        {
+            get { return m_TCPConnected; }
+        }
+
+        private bool videoStarted = false;
+        private Image videoView;
 
         private bool closing = false;
 
-        public Socket(string hostName, string port)
+        public Socket(string hostName, string tcpPort, string udpPort)
         {
             serverHostnameString = hostName;
-            serverPort = port;
+            serverTCPPort = tcpPort;
+            serverUDPPort = udpPort;
 
-            clientSocket = new StreamSocket();
+            clientTCPSocket = new StreamSocket();
+            clientUDPSocket = new DatagramSocket();
+
+            clientUDPSocket.MessageReceived += ClientUDPSocket_MessageReceived;
         }
 
-        public async void Connect()
+        public async void TCPConnect()
         {
-            if (m_connected)
+            if (m_TCPConnected)
             {
-                Debug.WriteLine("Already connected");
+                Debug.WriteLine("Already connected to TCP");
                 return;
             }
 
             try
             {
-                Debug.WriteLine("Trying to connect ...");
+                Debug.WriteLine("Trying to connect to TCP...");
 
                 serverHost = new HostName(serverHostnameString);
                 // Try to connect to the 
-                await clientSocket.ConnectAsync(serverHost, serverPort);
-                m_connected = true;
-                Debug.WriteLine("Connection established");
+                await clientTCPSocket.ConnectAsync(serverHost, serverTCPPort);
+                m_TCPConnected = true;
+                Debug.WriteLine("Connection to TCP established");
 
             }
             catch (Exception exception)
@@ -63,37 +91,78 @@ namespace CasperWP
                     throw;
                 }
 
-                Debug.WriteLine("Connect failed with error: " + exception.Message);
+                Debug.WriteLine("Connect to TCP failed with error: " + exception.Message);
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
                 closing = true;
                 // the Close method is mapped to the C# Dispose
-                clientSocket.Dispose();
-                clientSocket = null;
+                clientTCPSocket.Dispose();
+                clientTCPSocket = null;
             }
         }
 
-        public async void SendMessage(Byte[] message)
+        public async void UDPConnect()
         {
-            if (!m_connected)
+            if (m_UDPConnected)
             {
-                Debug.WriteLine("Must be connected to send!");
+                Debug.WriteLine("Already connected to UDP");
                 return;
             }
 
             try
             {
-                Debug.WriteLine("Trying to send data ...");
+                Debug.WriteLine("Trying to connect to UDP...");
 
-                DataWriter writer = new DataWriter(clientSocket.OutputStream);
+                serverHost = new HostName(serverHostnameString);
+                // Try to connect to the 
+                await clientUDPSocket.ConnectAsync(serverHost, serverUDPPort);
+                m_UDPConnected = true;
+                Debug.WriteLine("Connection to UDP established");
+
+
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception.Message);
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                Debug.WriteLine("Connect to UDP failed with error: " + exception.Message);
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                closing = true;
+                // the Close method is mapped to the C# Dispose
+                clientUDPSocket.Dispose();
+                clientUDPSocket = null;
+            }
+        }
+
+        public async void SendMessage(Byte[] message)
+        {
+            if (!m_TCPConnected)
+            {
+                Debug.WriteLine("Must be connected to TCP to send!");
+                return;
+            }
+
+            try
+            {
+                //Debug.WriteLine("Trying to send data over TCP...");
+
+                DataWriter writer = new DataWriter(clientTCPSocket.OutputStream);
 
                 // Call StoreAsync method to store the data to a backing stream
                 writer.WriteBytes(message);
 
                 await writer.StoreAsync();
 
-                Debug.WriteLine("Data was sent");
+                //Debug.WriteLine("Data was sent over TCP");
 
                 // detach the stream and close it
                 writer.DetachStream();
@@ -108,15 +177,150 @@ namespace CasperWP
                     throw;
                 }
 
-                Debug.WriteLine("Send data or receive failed with error: " + exception.Message);
+                Debug.WriteLine("Send data or receive over TCP failed with error: " + exception.Message);
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
                 closing = true;
-                clientSocket.Dispose();
-                clientSocket = null;
-                m_connected = false;
+                clientTCPSocket.Dispose();
+                clientTCPSocket = null;
+                m_TCPConnected = false;
             }
+        }
+
+        public async void StartVideo(Image image)
+        {
+            Byte[] message = new Byte[1];
+
+            message[0] = (Byte)'D';
+
+            if (!m_UDPConnected)
+            {
+                Debug.WriteLine("Must be connected to UDP to send!");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine("Trying to send data over UDP ...");
+
+                DataWriter writer = new DataWriter(clientUDPSocket.OutputStream);
+
+                // Call StoreAsync method to store the data to a backing stream
+                writer.WriteBytes(message);
+
+                await writer.StoreAsync();
+
+                Debug.WriteLine("Data was sent over UDP");
+                videoStarted = true;
+                videoView = image;
+
+                // detach the stream and close it
+                writer.DetachStream();
+                writer.Dispose();
+            }
+            catch (Exception exception)
+            {
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                Debug.WriteLine("Send data or receive over UDP failed with error: " + exception.Message);
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                closing = true;
+                clientUDPSocket.Dispose();
+                clientUDPSocket = null;
+                m_UDPConnected = false;
+            }
+        }
+
+        private async void ClientUDPSocket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
+        {
+            DataReader reader = args.GetDataReader();
+
+            Byte[] message = new Byte[reader.UnconsumedBufferLength];
+
+            reader.ReadBytes(message);            
+           
+            if(message[0] == 'V' && !isFinished)
+            {
+                string packetLength = "";
+                string imageLength = "";
+
+                for(int i = 1; i<3; i++)
+                {
+                    packetLength += (char)message[i];
+                    Debug.WriteLine(packetLength);
+                }
+
+                packetCount = int.Parse(packetLength);
+                Debug.WriteLine("Packet Count is: " + packetCount);
+
+                for (int i = 3; i<message.Length; i++)
+                {
+                    imageLength += (char)message[i]; 
+                }
+
+                imageSize = int.Parse(imageLength);
+                Debug.WriteLine("Image Size is: " + imageSize);
+
+                currentImage = new Byte[packetCount][];
+
+                currentPacket = 0;
+                currentByte = 0;
+
+                isFinished = true;
+            }
+            else
+            {
+                if(currentPacket == packetCount-1)
+                {
+                    Debug.WriteLine(currentByte + ", " + imageSize);
+
+                    Byte[] imageArray = new Byte[imageSize];
+                    int currentIndex = 0;
+
+                    foreach(Byte[] array in currentImage)
+                    {
+                        System.Buffer.BlockCopy(array, 0, imageArray, currentIndex, array.Length);
+
+                        currentIndex += array.Length;
+                    }
+                    Debug.WriteLine("before");
+                    BitmapImage image = await ConvertToBitmapImage(imageArray);
+                    Debug.WriteLine("after");
+
+                    videoView.Source = image;
+
+                    Debug.WriteLine("last");
+
+                    isFinished = true;
+                }
+                else
+                {                   
+                    currentImage[currentPacket] = message;
+                    currentByte += message.Length;                   
+
+                    currentPacket++;
+
+                    Debug.WriteLine("CurrentPacket = " + currentPacket + "/" + packetCount + ", CurrentByte = " + currentByte + "/" + imageSize + ".");          
+                }
+            }
+        }
+
+        public async Task<BitmapImage> ConvertToBitmapImage(byte[] image)
+        {
+            InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream();
+            var bitmapImage = new BitmapImage();
+            var memoryStream = new MemoryStream(image);
+            await memoryStream.CopyToAsync(ras.AsStreamForWrite());
+            await bitmapImage.SetSourceAsync(ras);
+            return bitmapImage;
         }
     }
 }

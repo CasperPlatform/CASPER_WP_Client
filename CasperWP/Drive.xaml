@@ -9,6 +9,8 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid x:Name="LayoutRoot" Background="#FFDBDCDC">
+        <Image x:Name="videoView"/>
+        <Button Click="OnVideo" Margin="450,0,0,333" Height="67" Width="147" Background="#FF2DEF96" FontFamily="Arial" FontWeight="Bold" Content="start video"/>
         <Grid Width="150" Height="150" Margin="25,0,0,25" HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <Canvas x:Name="Board">
                 <Rectangle Fill="#02FDFDFD" Width="200" Height="200" Canvas.Left="-25" Canvas.Top="-25" PointerMoved="LeftCanvas"/>

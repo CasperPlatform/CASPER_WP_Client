@@ -54,9 +54,10 @@ namespace CasperWP
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.1.238", "3000");
+            socket = new Socket("192.168.1.186", "9999", "9998");
 
-            socket.Connect();
+            socket.TCPConnect();
+            socket.UDPConnect();
         }
 
         private void StreamDelegate()
@@ -65,7 +66,7 @@ namespace CasperWP
             {
                 return;
             }
-            else if (!socket.Connected)
+            else if (!socket.TCPConnected)
             {
                 return;
             }
@@ -76,13 +77,14 @@ namespace CasperWP
                 message[0] = (Byte)'D';
 
                 char driveFlag;
-                if(XCoordinate>0)
+                if(YCoordinate>0)
                 {
                     driveFlag = 'F';
                 }
-                else if(XCoordinate<0)
+                else if(YCoordinate<0)
                 {
                     driveFlag = 'B';
+                    YCoordinate *= -1;
                 }
                 else
                 {
@@ -98,6 +100,7 @@ namespace CasperWP
                 else if (XCoordinate < 0)
                 {
                     steerFlag = 'L';
+                    XCoordinate *= -1;
                 }
                 else
                 {
@@ -117,6 +120,11 @@ namespace CasperWP
 
                 socket.SendMessage(message);          
             }
+        }
+
+        private void OnVideo(object sender, RoutedEventArgs e)
+        {
+            socket.StartVideo(videoView);
         }
 
         private async void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -143,6 +151,9 @@ namespace CasperWP
         {
             Canvas.SetLeft(joystickButton, 37.5);
             Canvas.SetTop(joystickButton, 37.5);
+
+            XCoordinate = 0;
+            YCoordinate = 0;
         }
 
         /// <summary>
