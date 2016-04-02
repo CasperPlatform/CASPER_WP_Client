@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -249,9 +249,10 @@ namespace CasperWP
 
             Byte[] message = new Byte[reader.UnconsumedBufferLength];
 
-            reader.ReadBytes(message);            
-           
-            if(message[0] == 'V' && !isFinished)
+            reader.ReadBytes(message);
+            ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ReadPacket(message)));
+            
+            /*if(message[0] == 'V' && !isFinished)
             {
                 string packetLength = "";
                 string imageLength = "";
@@ -280,7 +281,7 @@ namespace CasperWP
 
                 isFinished = true;
             }
-            else
+            /*else
             {
                
                 currentImage[currentPacket] = message;
@@ -307,12 +308,43 @@ namespace CasperWP
            
                     Debug.WriteLine("before");
 
-                    ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ImageConverter(imageArray)));
+                    //ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ImageConverter(imageArray)));
 
                     Debug.WriteLine("last");
 
                     isFinished = true;
                 }
+            }*/
+        }
+
+        private void ReadPacket(byte[] packet)
+        {
+
+            if (packet[0] == 0x01 && packet[1]=='V')
+            {
+                int imageNumber = packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5];
+
+                Debug.WriteLine(imageNumber);
+
+                int numberOfPackets = (int) packet[6];
+
+                Debug.WriteLine(numberOfPackets);
+
+                int imageSize = packet[7] << 24 | packet[8] << 16 | packet[9] << 8 | packet[10];
+
+                Debug.WriteLine(imageSize);
+
+        
+            }
+            if (packet[0] == 0x02)
+            {
+                int imageNumber = packet[1] << 24 | packet[2] << 16 | packet[3] << 8 | packet[4];
+
+                Debug.WriteLine(imageNumber);
+
+                int packetNumber = packet[5];
+
+                Debug.WriteLine(packetNumber);
             }
         }
 
