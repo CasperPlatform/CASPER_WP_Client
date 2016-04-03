@@ -17,6 +17,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
 using Windows.System.Threading;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Core;
 
 
 
@@ -54,10 +56,30 @@ namespace CasperWP
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.1.100", "9999", "6000");
+            socket = new Socket("192.168.10.1", "9999", "6000");
 
             socket.TCPConnect();
             socket.UDPConnect();
+            socket.ImageCompleted += UpdateImage;
+        }
+
+        private async void UpdateImage(object sender, EventArgs e)
+        {
+            byte[] array = socket.currentImage;
+
+            MemoryStream stream = new MemoryStream(array);
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+            async () =>
+            {
+                BitmapImage bitmapImage = new BitmapImage();
+                Debug.WriteLine("test");
+
+                await bitmapImage.SetSourceAsync(stream.AsRandomAccessStream());
+
+                videoView.Source = bitmapImage;
+            }
+            );
+
         }
 
         private void StreamDelegate()
@@ -72,7 +94,7 @@ namespace CasperWP
             }
             else
             {
-                Byte[] message = new Byte[8];
+                Byte[] message = new Byte[9];
 
                 message[0] = (Byte)'D';
 
@@ -117,6 +139,7 @@ namespace CasperWP
                 message[4] = X;
                 message[6] = 0xD;
                 message[7] = 0xA;
+                message[8] = 0x04;
 
                 socket.SendMessage(message);          
             }
