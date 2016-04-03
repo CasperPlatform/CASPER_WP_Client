@@ -26,9 +26,10 @@ namespace CasperWP
         private string serverTCPPort;
         private string serverUDPPort;
 
+        private int messageCount = 0;
         private int packetCount = 0;
         private int imageSize = 0;
-        private Byte[] currentImage;
+        public Byte[] currentImage;
 
         private bool m_TCPConnected = false;
 
@@ -59,6 +60,22 @@ namespace CasperWP
             clientUDPSocket = new DatagramSocket();
 
             clientUDPSocket.MessageReceived += ClientUDPSocket_MessageReceived;
+        }
+
+        public event EventHandler ImageCompleted;
+
+        public class ImageCompletedEventArgs : EventArgs
+        {
+            public byte[] ImageData { get; set; }           
+        }
+
+        protected virtual void OnImageCompleted(EventArgs e)
+        {
+            EventHandler handler = ImageCompleted;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         public async void TCPConnect()
@@ -118,8 +135,6 @@ namespace CasperWP
                 await clientUDPSocket.ConnectAsync(serverHost, serverUDPPort);
                 m_UDPConnected = true;
                 Debug.WriteLine("Connection to UDP established");
-
-
             }
             catch (Exception exception)
             {
@@ -238,26 +253,21 @@ namespace CasperWP
 
         private void ClientUDPSocket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
-            TimeSpan start = DateTime.Now.TimeOfDay;
             DataReader reader = args.GetDataReader();
-          
             Byte[] packet = new Byte[reader.UnconsumedBufferLength];
-            
+
             reader.ReadBytes(packet);
-            reader.DetachStream();
-            reader.Dispose();
+
             if (packet[0] == 0x01 && packet[1] == 'V')
             {
                 int imageNumber = packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5];
-                //Debug.WriteLine(imageNumber);
 
                 packetCount = packet[6];
 
-                Debug.WriteLine(packetCount);
 
                 imageSize = packet[7] << 24 | packet[8] << 16 | packet[9] << 8 | packet[10];
 
-                Debug.WriteLine(imageSize);
+                Debug.WriteLine("New Image received, " + imageNumber + ", " + packetCount + ", " + imageSize);
 
                 currentImage = new Byte[imageSize];
             }
@@ -265,15 +275,20 @@ namespace CasperWP
             {
                 int imageNumber = packet[1] << 24 | packet[2] << 16 | packet[3] << 8 | packet[4];
 
-                //Debug.WriteLine(imageNumber);
-
                 int packetNumber = packet[5];
 
-                Debug.WriteLine(packetNumber);
+                //Debug.WriteLine(imageNumber + ", " + packetNumber);
 
-                if(currentImage != null)
-                { 
-                    Array.Copy(packet, 6, currentImage, 8000 * packetNumber, packet.Length - 6);
+                if (currentImage != null)
+                {
+                    try
+                    {
+                        Array.Copy(packet, 6, currentImage, 8000 * packetNumber, packet.Length - 6);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.Message);
+                    }
                 }
                 else
                 {
@@ -281,44 +296,13 @@ namespace CasperWP
                 }
                 if (packetNumber == packetCount - 1)
                 {
-                    Debug.WriteLine(currentImage.Length + ", " + imageSize);
-        
+                    Debug.WriteLine("Image completed");
+                    OnImageCompleted(EventArgs.Empty);
                 }
             }
 
             packet = null;
-
-            TimeSpan stop = DateTime.Now.TimeOfDay - start;
-
-            Debug.WriteLine(stop);
-        }
-
-        public async void ImageConverter(Byte[] image)
-        {
-            Debug.WriteLine("Test1");
-            InMemoryRandomAccessStream randomAccessStream = new InMemoryRandomAccessStream();
-            Debug.WriteLine("Test2");
-
-            await randomAccessStream.WriteAsync(image.AsBuffer());
-            Debug.WriteLine("Test3");
-
-            randomAccessStream.Seek(0); // Just to be sure.
-            Debug.WriteLine("Test4");
-
-            CoreDispatcher dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-            Debug.WriteLine("Test5");
-
-            await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-            {
-                WriteableBitmap bitmap = new WriteableBitmap(640, 480);
-                Debug.WriteLine("Test5");
-
-                await bitmap.SetSourceAsync(randomAccessStream);
-                Debug.WriteLine("Test6");
-
-
-                videoView.Source = bitmap;
-            }); 
+            reader.Dispose();
         }
     }
 }

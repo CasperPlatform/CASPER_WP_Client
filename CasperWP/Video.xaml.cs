@@ -8,13 +8,16 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Display;
+using Windows.Storage.Streams;
 using Windows.System.Threading;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -43,10 +46,11 @@ namespace CasperWP
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.1.238", "9999", "6000");
+            socket = new Socket("192.168.10.1", "9999", "6000");
 
             //socket.TCPConnect();
             socket.UDPConnect();
+            socket.ImageCompleted += UpdateImage;
         }
 
         private void SendMessage(object sender, RoutedEventArgs e)
@@ -56,6 +60,27 @@ namespace CasperWP
             socket.StartVideo(image);
             
         }
+
+        private async void UpdateImage(object sender, EventArgs e)
+        {
+            byte[] array = socket.currentImage;
+
+            MemoryStream stream = new MemoryStream(array);
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+            async () =>
+            {
+                BitmapImage bitmapImage = new BitmapImage();
+                Debug.WriteLine("test");
+
+                await bitmapImage.SetSourceAsync(stream.AsRandomAccessStream());
+
+                image.Source = bitmapImage;
+            }
+            );
+            
+        }
+
+        
         /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
         /// provided when recreating a page from a prior session.
