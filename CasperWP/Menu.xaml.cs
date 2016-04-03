@@ -46,6 +46,11 @@ namespace CasperWP
         {
             Frame.Navigate(typeof(Sockets));
         }
+
+        private void OnVideo(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(Video));
+        }
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>

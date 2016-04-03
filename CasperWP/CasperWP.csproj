@@ -105,6 +105,9 @@
     <Compile Include="Sockets.xaml.cs">
       <DependentUpon>Sockets.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Video.xaml.cs">
+      <DependentUpon>Video.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -141,6 +144,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Sockets.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Video.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

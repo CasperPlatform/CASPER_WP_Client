@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -28,10 +28,7 @@ namespace CasperWP
 
         private int packetCount = 0;
         private int imageSize = 0;
-        private int currentPacket = 0;
-        private int currentByte = 0;
-        private Byte[][] currentImage;
-        private bool isFinished = false;
+        private Byte[] currentImage;
 
         private bool m_TCPConnected = false;
 
@@ -213,9 +210,7 @@ namespace CasperWP
 
                 await writer.StoreAsync();
 
-                Debug.WriteLine("Data was sent over UDP");
-                videoStarted = true;
-                videoView = image;
+                Debug.WriteLine("Data was sent over UDP");         
 
                 // detach the stream and close it
                 writer.DetachStream();
@@ -243,109 +238,59 @@ namespace CasperWP
 
         private void ClientUDPSocket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
-            Debug.WriteLine(currentPacket);
-
+            TimeSpan start = DateTime.Now.TimeOfDay;
             DataReader reader = args.GetDataReader();
-
-            Byte[] message = new Byte[reader.UnconsumedBufferLength];
-
-            reader.ReadBytes(message);
-            ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ReadPacket(message)));
+          
+            Byte[] packet = new Byte[reader.UnconsumedBufferLength];
             
-            /*if(message[0] == 'V' && !isFinished)
-            {
-                string packetLength = "";
-                string imageLength = "";
-
-                for(int i = 1; i<2; i++)
-                {
-                    packetLength += (char)message[i];
-                    Debug.WriteLine(packetLength);
-                }
-
-                packetCount = int.Parse(packetLength);
-                Debug.WriteLine("Packet Count is: " + packetCount);
-
-                for (int i = 2; i<message.Length; i++)
-                {
-                    imageLength += (char)message[i]; 
-                }
-
-                imageSize = int.Parse(imageLength);
-                Debug.WriteLine("Image Size is: " + imageSize);
-
-                currentImage = new Byte[packetCount][];
-
-                currentPacket = 0;
-                currentByte = 0;
-
-                isFinished = true;
-            }
-            /*else
-            {
-               
-                currentImage[currentPacket] = message;
-
-                currentByte += message.Length;
-
-                currentPacket++;
-
-                Debug.WriteLine("CurrentPacket = " + currentPacket + "/" + packetCount + ", CurrentByte = " + currentByte + "/" + imageSize + ".");
-
-                if (currentPacket == packetCount)
-                {
-                    Debug.WriteLine(currentByte + ", " + imageSize);
-
-                    Byte[] imageArray = new Byte[imageSize];
-                    int currentIndex = 0;
-
-                    foreach (Byte[] array in currentImage)
-                    {
-                        System.Buffer.BlockCopy(array, 0, imageArray, currentIndex, array.Length);
-
-                        currentIndex += array.Length;
-                    }
-           
-                    Debug.WriteLine("before");
-
-                    //ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ImageConverter(imageArray)));
-
-                    Debug.WriteLine("last");
-
-                    isFinished = true;
-                }
-            }*/
-        }
-
-        private void ReadPacket(byte[] packet)
-        {
-
-            if (packet[0] == 0x01 && packet[1]=='V')
+            reader.ReadBytes(packet);
+            reader.DetachStream();
+            reader.Dispose();
+            if (packet[0] == 0x01 && packet[1] == 'V')
             {
                 int imageNumber = packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5];
+                //Debug.WriteLine(imageNumber);
 
-                Debug.WriteLine(imageNumber);
+                packetCount = packet[6];
 
-                int numberOfPackets = (int) packet[6];
+                Debug.WriteLine(packetCount);
 
-                Debug.WriteLine(numberOfPackets);
-
-                int imageSize = packet[7] << 24 | packet[8] << 16 | packet[9] << 8 | packet[10];
+                imageSize = packet[7] << 24 | packet[8] << 16 | packet[9] << 8 | packet[10];
 
                 Debug.WriteLine(imageSize);
 
-        
+                currentImage = new Byte[imageSize];
             }
             if (packet[0] == 0x02)
             {
                 int imageNumber = packet[1] << 24 | packet[2] << 16 | packet[3] << 8 | packet[4];
 
-                Debug.WriteLine(imageNumber);
+                //Debug.WriteLine(imageNumber);
 
                 int packetNumber = packet[5];
 
                 Debug.WriteLine(packetNumber);
+
+                if(currentImage != null)
+                { 
+                    Array.Copy(packet, 6, currentImage, 8000 * packetNumber, packet.Length - 6);
+                }
+                else
+                {
+                    Debug.WriteLine("Image is null for some reason...");
+                }
+                if (packetNumber == packetCount - 1)
+                {
+                    Debug.WriteLine(currentImage.Length + ", " + imageSize);
+        
+                }
             }
+
+            packet = null;
+
+            TimeSpan stop = DateTime.Now.TimeOfDay - start;
+
+            Debug.WriteLine(stop);
         }
 
         public async void ImageConverter(Byte[] image)

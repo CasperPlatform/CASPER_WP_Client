@@ -13,9 +13,10 @@
                 <TextBlock x:Name="textBlock" Margin="0" TextWrapping="Wrap" Text="Menu" Foreground="#FFDBDCDC" FontFamily="Arial" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Viewbox>
         </Grid>
-        <Grid Margin="0,80,0,0" Background="#FFDBDCDC">
+        <Grid Margin="0,80,0,0" Background="#FF203448">
             <Button Click ="OnDrive" x:Name="drive" Content="Drive" HorizontalAlignment="Stretch" Margin="75,25,75,450" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
             <Button Click ="OnSockets" x:Name="socket" Content="Socket" HorizontalAlignment="Stretch" Margin="75,100,75,375" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
+            <Button Click ="OnVideo" x:Name="video" Content="Video" HorizontalAlignment="Stretch" Margin="75,179,75,307" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
         </Grid>
         
     </Grid>

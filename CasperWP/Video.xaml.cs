@@ -1,13 +1,14 @@
 using CasperWP.Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Display;
-using Windows.UI.ViewManagement;
+using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -15,29 +16,21 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Diagnostics;
-using Windows.System.Threading;
 
-
-
-// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
 namespace CasperWP
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class Drive : Page
+    public sealed partial class Video : Page
     {
         private NavigationHelper navigationHelper;
-        private ObservableDictionary defaultViewModel = new ObservableDictionary();
-
-        private double XCoordinate = 0;
-        private double YCoordinate = 0;
 
         private Socket socket;
 
-        public Drive()
+        public Video()
         {
             this.InitializeComponent();
 
@@ -46,133 +39,23 @@ namespace CasperWP
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
 
             ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ConnectionDelegate()));
-
-            TimeSpan period = TimeSpan.FromMilliseconds(50);
-
-            ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => StreamDelegate(), period);
         }
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.1.100", "9999", "6000");
+            socket = new Socket("192.168.1.238", "9999", "6000");
 
-            socket.TCPConnect();
+            //socket.TCPConnect();
             socket.UDPConnect();
         }
 
-        private void StreamDelegate()
+        private void SendMessage(object sender, RoutedEventArgs e)
         {
-            if (socket == null)
-            {
-                return;
-            }
-            else if (!socket.TCPConnected)
-            {
-                return;
-            }
-            else
-            {
-                Byte[] message = new Byte[8];
-
-                message[0] = (Byte)'D';
-
-                char driveFlag;
-                if(YCoordinate>0)
-                {
-                    driveFlag = 'F';
-                }
-                else if(YCoordinate<0)
-                {
-                    driveFlag = 'B';
-                    YCoordinate *= -1;
-                }
-                else
-                {
-                    driveFlag = 'I';
-                }
-                message[1] = (Byte)driveFlag;
-
-                char steerFlag;
-                if (XCoordinate > 0)
-                {
-                    steerFlag = 'R';
-                }
-                else if (XCoordinate < 0)
-                {
-                    steerFlag = 'L';
-                    XCoordinate *= -1;
-                }
-                else
-                {
-                    steerFlag = 'I';
-                }
-                message[2] = (Byte)steerFlag;
-
-                Byte Y = (Byte)(Math.Abs(YCoordinate) * 255);
-
-                message[3] = Y;
-
-                Byte X = (Byte)(Math.Abs(XCoordinate) * 255);
-
-                message[4] = X;
-                message[6] = 0xD;
-                message[7] = 0xA;
-
-                socket.SendMessage(message);          
-            }
+            Debug.WriteLine("bajs");
+            
+            socket.StartVideo(image);
+            
         }
-
-        private void OnVideo(object sender, RoutedEventArgs e)
-        {
-            socket.StartVideo(videoView);
-        }
-
-        private async void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {      
-            Point dragPoint = e.GetCurrentPoint(Board).Position;
-
-            Canvas.SetLeft(joystickButton, dragPoint.X-25);
-            Canvas.SetTop(joystickButton, dragPoint.Y-25);
-
-            XCoordinate = (dragPoint.X - 75) / 75;
-            YCoordinate = -1*(dragPoint.Y - 75) / 75;            
-        }
-
-        private void JoystickReleased(object sender, PointerRoutedEventArgs e)
-        {
-            Canvas.SetLeft(joystickButton, 37.5);
-            Canvas.SetTop(joystickButton, 37.5);
-
-            XCoordinate = 0;
-            YCoordinate = 0;
-        }
-
-        private void LeftCanvas(object sender, PointerRoutedEventArgs e)
-        {
-            Canvas.SetLeft(joystickButton, 37.5);
-            Canvas.SetTop(joystickButton, 37.5);
-
-            XCoordinate = 0;
-            YCoordinate = 0;
-        }
-
-        /// <summary>
-        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
-        /// </summary>
-        public NavigationHelper NavigationHelper
-        {
-            get { return this.navigationHelper; }
-        }
-
-        /// <summary>
-        /// Gets the view model for this <see cref="Page"/>.
-        /// This can be changed to a strongly typed view model.
-        /// </summary>
-        public ObservableDictionary DefaultViewModel
-        {
-            get { return this.defaultViewModel; }
-        }
-
         /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
         /// provided when recreating a page from a prior session.
