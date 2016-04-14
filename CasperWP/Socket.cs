@@ -30,6 +30,7 @@ namespace CasperWP
         public VideoFrame lastFrame;
 
         private TimeSpan idleTimer = TimeSpan.FromMilliseconds(2500);
+        private ThreadPoolTimer videoTimer;
 
         private bool m_TCPConnected = false;
 
@@ -228,12 +229,11 @@ namespace CasperWP
 
                 Debug.WriteLine("Data was sent over UDP");         
 
-
                 // detach the stream and close it
                 writer.DetachStream();
                 writer.Dispose();
 
-                ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => IdleDelegate(), idleTimer);
+                videoTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => IdleDelegate(), idleTimer);
             }
             catch (Exception exception)
             {
@@ -312,6 +312,8 @@ namespace CasperWP
                 clientUDPSocket = null;
                 m_UDPConnected = false;
             }
+
+            videoTimer.Cancel();
         }
 
         private async void IdleDelegate()

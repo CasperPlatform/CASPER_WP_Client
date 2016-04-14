@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Threading.Tasks;
+using Windows.Data.Json;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -46,9 +51,27 @@ namespace CasperWP
             // this event is handled for you.
         }
 
-        private void OnLogin(object sender, RoutedEventArgs e)
+        private async void OnLogin(object sender, RoutedEventArgs e)
         {
+            string message = "{\"username\":\"Linus\", \"password\":\"LinusLinus\"}";
+
+            JsonObject response = await PostAsync("http://192.168.10.1:10000/login", message);
+
+            string token = response.GetNamedString("token");
+
+            Debug.WriteLine(token);
             Frame.Navigate(typeof(Menu));
+        }   
+
+        public async Task<JsonObject> PostAsync(string uri, string data)
+        {
+            var httpClient = new HttpClient();
+            var response = await httpClient.PostAsync(uri, new StringContent(data, Encoding.UTF8, "application/json"));
+
+            response.EnsureSuccessStatusCode();
+
+            string content = await response.Content.ReadAsStringAsync();
+            return await Task.Run(() => JsonObject.Parse(content));
         }
     }
 }

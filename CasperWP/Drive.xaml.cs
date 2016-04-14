@@ -40,6 +40,8 @@ namespace CasperWP
         private Socket socket;
         private bool videoIsActive;
 
+        private ThreadPoolTimer commandTimer;
+
         public Drive()
         {
             this.InitializeComponent();
@@ -52,7 +54,7 @@ namespace CasperWP
 
             TimeSpan period = TimeSpan.FromMilliseconds(50);
 
-            ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => StreamDelegate(), period);
+            commandTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => CommandDelegate(), period);
         }
 
         private void ConnectionDelegate()
@@ -82,7 +84,7 @@ namespace CasperWP
             );
         }
 
-        private void StreamDelegate()
+        private void CommandDelegate()
         {
             if (socket == null)
             {
@@ -259,6 +261,9 @@ namespace CasperWP
             this.navigationHelper.OnNavigatedFrom(e);
 
             Windows.Graphics.Display.DisplayInformation.AutoRotationPreferences = DisplayOrientations.Portrait;
+
+            socket.StopVideo();
+            commandTimer.Cancel();
         }
 
         #endregion
