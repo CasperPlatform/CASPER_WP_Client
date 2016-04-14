@@ -26,10 +26,7 @@ namespace CasperWP
         private string serverTCPPort;
         private string serverUDPPort;
 
-        private int messageCount = 0;
-        private int packetCount = 0;
-        private int imageSize = 0;
-        public Byte[] currentImage;
+        public List<VideoFrame> frames = new List<VideoFrame>();
 
         private bool m_TCPConnected = false;
 
@@ -44,11 +41,6 @@ namespace CasperWP
         {
             get { return m_TCPConnected; }
         }
-
-        private bool videoStarted = false;
-        private Image videoView;
-
-        private bool closing = false;
 
         public Socket(string hostName, string tcpPort, string udpPort)
         {
@@ -111,7 +103,6 @@ namespace CasperWP
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
-                closing = true;
                 // the Close method is mapped to the C# Dispose
                 clientTCPSocket.Dispose();
                 clientTCPSocket = null;
@@ -150,7 +141,6 @@ namespace CasperWP
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
-                closing = true;
                 // the Close method is mapped to the C# Dispose
                 clientUDPSocket.Dispose();
                 clientUDPSocket = null;
@@ -195,7 +185,6 @@ namespace CasperWP
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
-                closing = true;
                 clientTCPSocket.Dispose();
                 clientTCPSocket = null;
                 m_TCPConnected = false;
@@ -204,9 +193,18 @@ namespace CasperWP
 
         public async void StartVideo(Image image)
         {
-            Byte[] message = new Byte[1];
+            string token = "8861260edd208713";
+            byte[] array = Encoding.UTF8.GetBytes(token);
 
-            message[0] = (Byte)'D';
+            byte[] message = new Byte[20];
+
+            message[0] = 0x01;
+
+            Array.Copy(array, 0, message, 1, 16);
+
+            message[17] = (byte)'S';
+            message[18] = 0x0D;
+            message[19] = 0x0A;
 
             if (!m_UDPConnected)
             {
@@ -244,7 +242,6 @@ namespace CasperWP
                 // Could retry the connection, but for this simple example
                 // just close the socket.
 
-                closing = true;
                 clientUDPSocket.Dispose();
                 clientUDPSocket = null;
                 m_UDPConnected = false;
@@ -258,32 +255,41 @@ namespace CasperWP
 
             reader.ReadBytes(packet);
 
-            if (packet[0] == 0x01 && packet[1] == 'V')
+            ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ReadMessage(packet)));
+        }
+
+        private void ReadMessage(byte[] message)
+        {
+            if (message[0] == 0x01 && message[1] == 'V')
             {
-                int imageNumber = packet[2] << 24 | packet[3] << 16 | packet[4] << 8 | packet[5];
+                int imageNumber = message[2] << 24 | message[3] << 16 | message[4] << 8 | message[5];
 
-                packetCount = packet[6];
+                int packetCount = message[6];
 
-
-                imageSize = packet[7] << 24 | packet[8] << 16 | packet[9] << 8 | packet[10];
+                int imageSize = message[7] << 24 | message[8] << 16 | message[9] << 8 | message[10];
 
                 Debug.WriteLine("New Image received, " + imageNumber + ", " + packetCount + ", " + imageSize);
 
-                currentImage = new Byte[imageSize];
+                frames.Add(new VideoFrame(imageNumber, packetCount, imageSize));
             }
-            if (packet[0] == 0x02)
+            if (message[0] == 0x02)
             {
-                int imageNumber = packet[1] << 24 | packet[2] << 16 | packet[3] << 8 | packet[4];
+                int imageNumber = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
 
-                int packetNumber = packet[5];
+                int packetNumber = message[5];
 
                 //Debug.WriteLine(imageNumber + ", " + packetNumber);
+
+                for(int i = frames.Count; i>0; i--)
+                {
+                    if frames[]
+                }
 
                 if (currentImage != null)
                 {
                     try
                     {
-                        Array.Copy(packet, 6, currentImage, 8000 * packetNumber, packet.Length - 6);
+                        Array.Copy(message, 6, currentImage, 8000 * packetNumber, message.Length - 6);
                     }
                     catch (Exception e)
                     {
@@ -300,9 +306,6 @@ namespace CasperWP
                     OnImageCompleted(EventArgs.Empty);
                 }
             }
-
-            packet = null;
-            reader.Dispose();
         }
     }
 }

@@ -46,7 +46,7 @@ namespace CasperWP
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.10.1", "9999", "6000");
+            socket = new Socket("192.168.1.234", "0", "9999");
 
             //socket.TCPConnect();
             socket.UDPConnect();
