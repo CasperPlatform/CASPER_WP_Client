@@ -46,7 +46,7 @@ namespace CasperWP
 
         private void ConnectionDelegate()
         {
-            socket = new Socket("192.168.1.234", "0", "9999");
+            socket = new Socket("192.168.10.1", "0", "6000");
 
             //socket.TCPConnect();
             socket.UDPConnect();
@@ -63,7 +63,7 @@ namespace CasperWP
 
         private async void UpdateImage(object sender, EventArgs e)
         {
-            byte[] array = socket.currentImage;
+            byte[] array = socket.lastFrame.image;
 
             MemoryStream stream = new MemoryStream(array);
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,

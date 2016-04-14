@@ -27,6 +27,9 @@ namespace CasperWP
         private string serverUDPPort;
 
         public List<VideoFrame> frames = new List<VideoFrame>();
+        public VideoFrame lastFrame;
+
+        private TimeSpan idleTimer = TimeSpan.FromMilliseconds(2500);
 
         private bool m_TCPConnected = false;
 
@@ -193,7 +196,7 @@ namespace CasperWP
 
         public async void StartVideo(Image image)
         {
-            string token = "8861260edd208713";
+            string token = "632e81da5c5d8cf2";
             byte[] array = Encoding.UTF8.GetBytes(token);
 
             byte[] message = new Byte[20];
@@ -225,6 +228,67 @@ namespace CasperWP
 
                 Debug.WriteLine("Data was sent over UDP");         
 
+
+                // detach the stream and close it
+                writer.DetachStream();
+                writer.Dispose();
+
+                ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => IdleDelegate(), idleTimer);
+            }
+            catch (Exception exception)
+            {
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                Debug.WriteLine("Send data or receive over UDP failed with error: " + exception.Message);
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                clientUDPSocket.Dispose();
+                clientUDPSocket = null;
+                m_UDPConnected = false;
+            }
+        }
+
+        private async void IdleDelegate()
+        {
+            string token = "632e81da5c5d8cf2";
+            byte[] array = Encoding.UTF8.GetBytes(token);
+
+            byte[] message = new Byte[20];
+
+            message[0] = 0x01;
+
+            Array.Copy(array, 0, message, 1, 16);
+
+            message[17] = (byte)'I';
+            message[18] = 0x0D;
+            message[19] = 0x0A;
+
+            if (!m_UDPConnected)
+            {
+                Debug.WriteLine("Must be connected to UDP to send!");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine("Trying to send data over UDP ...");
+
+                DataWriter writer = new DataWriter(clientUDPSocket.OutputStream);
+
+                // Call StoreAsync method to store the data to a backing stream
+                writer.WriteBytes(message);
+
+                await writer.StoreAsync();
+
+                Debug.WriteLine("Data was sent over UDP");
+
+
                 // detach the stream and close it
                 writer.DetachStream();
                 writer.Dispose();
@@ -255,7 +319,7 @@ namespace CasperWP
 
             reader.ReadBytes(packet);
 
-            ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => ReadMessage(packet)));
+            ReadMessage(packet);
         }
 
         private void ReadMessage(byte[] message)
@@ -275,35 +339,28 @@ namespace CasperWP
             if (message[0] == 0x02)
             {
                 int imageNumber = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-
                 int packetNumber = message[5];
 
-                //Debug.WriteLine(imageNumber + ", " + packetNumber);
+                for (int i = 0; i < frames.Count; i++)
+                {                  
+                    if (frames[i].imageNumber == imageNumber)
+                    {                        
+                        if (frames[i].AddImagePart(message, packetNumber))
+                        {
+                            Debug.WriteLine("Image completed");
+                            lastFrame = frames[i];
+                            OnImageCompleted(EventArgs.Empty);
 
-                for(int i = frames.Count; i>0; i--)
-                {
-                    if frames[]
-                }
-
-                if (currentImage != null)
-                {
-                    try
-                    {
-                        Array.Copy(message, 6, currentImage, 8000 * packetNumber, message.Length - 6);
+                            for (int j = 0; j < frames.Count; j++)
+                            {
+                                if (frames[j].imageNumber < lastFrame.imageNumber)
+                                {
+                                    frames.RemoveAt(j);
+                                    j--;
+                                }
+                            }
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine(e.Message);
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine("Image is null for some reason...");
-                }
-                if (packetNumber == packetCount - 1)
-                {
-                    Debug.WriteLine("Image completed");
-                    OnImageCompleted(EventArgs.Empty);
                 }
             }
         }

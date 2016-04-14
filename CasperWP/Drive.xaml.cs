@@ -65,7 +65,7 @@ namespace CasperWP
 
         private async void UpdateImage(object sender, EventArgs e)
         {
-            byte[] array = socket.currentImage;
+            byte[] array = socket.lastFrame.image;
 
             MemoryStream stream = new MemoryStream(array);
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
