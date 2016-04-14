@@ -38,6 +38,7 @@ namespace CasperWP
         private double YCoordinate = 0;
 
         private Socket socket;
+        private bool videoIsActive;
 
         public Drive()
         {
@@ -79,7 +80,6 @@ namespace CasperWP
                 videoView.Source = bitmapImage;
             }
             );
-
         }
 
         private void StreamDelegate()
@@ -94,9 +94,9 @@ namespace CasperWP
             }
             else
             {
-                Byte[] message = new Byte[9];
+                byte[] message = new byte[9];
 
-                message[0] = (Byte)'D';
+                message[0] = (byte)'D';
 
                 char driveFlag;
                 if(YCoordinate>0)
@@ -112,7 +112,7 @@ namespace CasperWP
                 {
                     driveFlag = 'I';
                 }
-                message[1] = (Byte)driveFlag;
+                message[1] = (byte)driveFlag;
 
                 char steerFlag;
                 if (XCoordinate > 0)
@@ -128,13 +128,13 @@ namespace CasperWP
                 {
                     steerFlag = 'I';
                 }
-                message[2] = (Byte)steerFlag;
+                message[2] = (byte)steerFlag;
 
-                Byte Y = (Byte)(Math.Abs(YCoordinate) * 255);
+                byte Y = (byte)(Math.Abs(YCoordinate) * 255);
 
                 message[3] = Y;
 
-                Byte X = (Byte)(Math.Abs(XCoordinate) * 255);
+                byte X = (byte)(Math.Abs(XCoordinate) * 255);
 
                 message[4] = X;
                 message[6] = 0xD;
@@ -147,7 +147,16 @@ namespace CasperWP
 
         private void OnVideo(object sender, RoutedEventArgs e)
         {
-            socket.StartVideo(videoView);
+            if(videoIsActive)
+            {
+                socket.StopVideo();
+            }
+            else
+            {
+                socket.StartVideo();
+            }
+
+            videoIsActive = !videoIsActive;
         }
 
         private async void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)

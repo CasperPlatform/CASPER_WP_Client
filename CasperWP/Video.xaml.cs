@@ -57,7 +57,7 @@ namespace CasperWP
         {
             Debug.WriteLine("bajs");
             
-            socket.StartVideo(image);
+            socket.StartVideo();
             
         }
 
@@ -76,8 +76,7 @@ namespace CasperWP
 
                 image.Source = bitmapImage;
             }
-            );
-            
+            );           
         }
 
         

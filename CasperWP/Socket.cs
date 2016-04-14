@@ -194,7 +194,7 @@ namespace CasperWP
             }
         }
 
-        public async void StartVideo(Image image)
+        public async void StartVideo()
         {
             string token = "632e81da5c5d8cf2";
             byte[] array = Encoding.UTF8.GetBytes(token);
@@ -227,6 +227,66 @@ namespace CasperWP
                 await writer.StoreAsync();
 
                 Debug.WriteLine("Data was sent over UDP");         
+
+
+                // detach the stream and close it
+                writer.DetachStream();
+                writer.Dispose();
+
+                ThreadPoolTimer PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((IAsyncAction) => IdleDelegate(), idleTimer);
+            }
+            catch (Exception exception)
+            {
+                // If this is an unknown status, 
+                // it means that the error is fatal and retry will likely fail.
+                if (SocketError.GetStatus(exception.HResult) == SocketErrorStatus.Unknown)
+                {
+                    throw;
+                }
+
+                Debug.WriteLine("Send data or receive over UDP failed with error: " + exception.Message);
+                // Could retry the connection, but for this simple example
+                // just close the socket.
+
+                clientUDPSocket.Dispose();
+                clientUDPSocket = null;
+                m_UDPConnected = false;
+            }
+        }
+
+        public async void StopVideo()
+        {
+            string token = "632e81da5c5d8cf2";
+            byte[] array = Encoding.UTF8.GetBytes(token);
+
+            byte[] message = new Byte[20];
+
+            message[0] = 0x01;
+
+            Array.Copy(array, 0, message, 1, 16);
+
+            message[17] = (byte)'s';
+            message[18] = 0x0D;
+            message[19] = 0x0A;
+
+            if (!m_UDPConnected)
+            {
+                Debug.WriteLine("Must be connected to UDP to send!");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine("Trying to send data over UDP ...");
+
+                DataWriter writer = new DataWriter(clientUDPSocket.OutputStream);
+
+                // Call StoreAsync method to store the data to a backing stream
+                writer.WriteBytes(message);
+
+                await writer.StoreAsync();
+
+                Debug.WriteLine("Data was sent over UDP");
 
 
                 // detach the stream and close it
