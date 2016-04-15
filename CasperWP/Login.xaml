@@ -8,17 +8,15 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid Background="#FF203448">
-        <Viewbox Stretch="Uniform" Margin="75,100,75,400">
-            <TextBlock Grid.Row="0" x:Name="logo" Margin="0" TextWrapping="Wrap" FontSize="48" Foreground="#FFDBDCDC" FontWeight="Bold" FontFamily="Arial">
-        	    <Run Text="CASP"/>
-        	    <Run Text="."/>
-        	    <Run FontStyle="Italic" Text="ER"/>
-            </TextBlock>
+    <Grid Background="#1a2636">
+        <Viewbox Stretch="Uniform" Margin="75,33,75,515">
+            <TextBlock Grid.Row="0" x:Name="logo" Text="CASP.ER" Margin="0" TextWrapping="Wrap" FontSize="48" Foreground="#FFDBDCDC" FontWeight="Bold" FontFamily="Arial"/>
         </Viewbox>
-
-        <TextBox x:Name="username" AcceptsReturn="True" FontFamily="Arial" Foreground="#FFDBDCDC" PlaceholderText="Username" Margin="75,250,75,0"/>
-        <PasswordBox x:Name="passwordBox" Foreground="#FFDBDCDC" PlaceholderText="Password" Margin="75,300,75,0"/>
-        <Button Click="OnLogin" x:Name="login" Content="Button" Margin="75,0,75,165" Background="#FF2DEF96" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60"/>
+        <Viewbox x:Name="welcome" Stretch="Uniform" Margin="75,140,75,478">
+            <TextBlock x:Name="textBlock" TextWrapping="Wrap" Text="Welcome" Foreground="#FFDBDCDC" FontFamily="Arial"/>
+        </Viewbox>
+        <TextBox x:Name="username" AcceptsReturn="True" FontFamily="Arial" Foreground="#FFDBDCDC" PlaceholderText="Username" Margin="75,199,75,0"/>
+        <PasswordBox x:Name="passwordBox" Foreground="#FFDBDCDC" PlaceholderText="Password" Margin="75,261,75,0"/>
+        <Button Click="OnLogin" x:Name="login" Content="Login" Margin="75,0,75,75" Background="#FF2DEF96" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Height="60"/>
     </Grid>
 </Page>

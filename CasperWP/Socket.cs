@@ -197,7 +197,7 @@ namespace CasperWP
 
         public async void StartVideo()
         {
-            string token = "632e81da5c5d8cf2";
+            string token = Account.token;
             byte[] array = Encoding.UTF8.GetBytes(token);
 
             byte[] message = new Byte[20];
@@ -256,7 +256,7 @@ namespace CasperWP
 
         public async void StopVideo()
         {
-            string token = "632e81da5c5d8cf2";
+            string token = Account.token;
             byte[] array = Encoding.UTF8.GetBytes(token);
 
             byte[] message = new Byte[20];
@@ -318,7 +318,7 @@ namespace CasperWP
 
         private async void IdleDelegate()
         {
-            string token = "632e81da5c5d8cf2";
+            string token = Account.token;
             byte[] array = Encoding.UTF8.GetBytes(token);
 
             byte[] message = new Byte[20];

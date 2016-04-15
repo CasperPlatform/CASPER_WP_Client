@@ -5,19 +5,22 @@
     xmlns:local="using:CasperWP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" Background="#FFDBDCDC">
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid x:Name="LayoutRoot" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid Margin="0,0,0,550" Background="#FF203448">
-            <Viewbox Margin="150,15" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Width="400">
+        <Grid Margin="0,0,0,600" Background="#000000">
+            <Viewbox Margin="150,0" HorizontalAlignment="Center" VerticalAlignment="Center" Height="42" Width="92">
                 <TextBlock x:Name="textBlock" Margin="0" TextWrapping="Wrap" Text="Menu" Foreground="#FFDBDCDC" FontFamily="Arial" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Viewbox>
+            <Button Margin="356,-11,0,-10" BorderThickness="0" FontFamily="Fonts/fontawesome-webfont.ttf#FontAwesome" Content="" HorizontalAlignment="Left" FontSize="16" VerticalAlignment="Top" MinWidth="0" MinHeight="0" Height="61" Width="44" >
+                <Button.Background>
+                    <ImageBrush Stretch="Fill" ImageSource="Assets/settings.png"/>
+                </Button.Background>
+            </Button>
         </Grid>
-        <Grid Margin="0,80,0,0" Background="#FF203448">
-            <Button Click ="OnDrive" x:Name="drive" Content="Drive" HorizontalAlignment="Stretch" Margin="75,25,75,450" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
-            <Button Click ="OnSockets" x:Name="socket" Content="Socket" HorizontalAlignment="Stretch" Margin="75,100,75,375" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
-            <Button Click ="OnVideo" x:Name="video" Content="Video" HorizontalAlignment="Stretch" Margin="75,179,75,307" VerticalAlignment="Stretch" Height="60" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0"/>
+        <Grid HorizontalAlignment="Left" Margin="0,45,0,0" VerticalAlignment="Top" Width="400" Background="#FF1A2636">
+            <Button Click ="OnDrive" x:Name="drive"  HorizontalAlignment="Stretch" Margin="75,55,75,480" VerticalAlignment="Stretch" FontFamily="Arial" FontWeight="Bold" Background="#FF2DEF96" BorderThickness="0" Content="Drive"/>
         </Grid>
-        
     </Grid>
 </Page>

@@ -53,13 +53,14 @@ namespace CasperWP
 
         private async void OnLogin(object sender, RoutedEventArgs e)
         {
-            string message = "{\"username\":\"Linus\", \"password\":\"LinusLinus\"}";
+            string message = "{\"username\":\"" + username.Text + "\", \"password\":\""+ passwordBox.Password +"\"}";
 
             JsonObject response = await PostAsync("http://192.168.10.1:10000/login", message);
 
             string token = response.GetNamedString("token");
 
-            Debug.WriteLine(token);
+            Account.token = token;
+
             Frame.Navigate(typeof(Menu));
         }   
 
